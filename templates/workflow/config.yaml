@@ -1,0 +1,47 @@
+# Agent Workflow Configuration
+# See https://github.com/miguelalcalde/agentworkflow for documentation
+
+workflow:
+  name: "My Project"
+  version: "1.0"
+
+# File locations (relative to repo root)
+paths:
+  backlog: ".workflow/backlog.md"
+  prds: ".workflow/prds"
+  plans: ".workflow/plans"
+  questions: ".workflow/questions.md"
+
+# Agent settings
+agents:
+  picker:
+    enabled: true
+    auto_browser: true  # Use agent-browser for research if available
+  planner:
+    enabled: true
+  refiner:
+    enabled: true
+  implementer:
+    enabled: true
+    auto_commit: true
+    run_tests: true
+    run_lint: true
+
+# Commands (customize for your project)
+commands:
+  test: "npm test"           # or: bun test, pytest, go test, etc.
+  lint: "npm run lint"       # or: bun run check, ruff, golangci-lint, etc.
+  build: "npm run build"     # or: bun run build, cargo build, etc.
+
+# Boundaries - files agents should not modify
+boundaries:
+  never_touch:
+    - "*.lock"
+    - "package-lock.json"
+    - "yarn.lock"
+    - "bun.lock"
+    - ".git/**"
+    - "node_modules/**"
+    - "vendor/**"
+    - "dist/**"
+    - "build/**"

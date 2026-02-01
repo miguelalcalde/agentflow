@@ -1,0 +1,122 @@
+---
+description: Multi-agent workflow rules for Cursor
+globs: [".workflow/**"]
+---
+
+# Multi-Agent Workflow Rules
+
+This repository uses a file-based workflow system where agents and humans work together on tasks. All workflow state lives in `.workflow/`.
+
+See https://github.com/miguelalcalde/agentworkflow for complete documentation.
+
+## Status Values
+
+| Status | Meaning |
+|--------|---------|
+| `not_started` | No work begun |
+| `ready` | Ready for next participant |
+| `in_progress` | Currently being worked on |
+| `review` | Needs review |
+| `blocked` | Has unanswered questions (assignee: human) |
+| `done` | Completed |
+
+## Workflow Directory Structure
+
+```
+.workflow/
+├── config.yaml      # Project configuration
+├── backlog.md       # Task backlog
+├── questions.md     # Open questions
+├── prds/            # PRD documents
+└── plans/           # Implementation plans
+```
+
+---
+
+## As Picker
+
+When asked to "pick a task", "start new work", or "create a PRD":
+
+1. Read `.workflow/backlog.md`
+2. Find first task with `status: not_started`
+3. Update task: `status: in_progress`, `assignee: picker`
+4. Analyze the codebase for context
+5. Create PRD in `.workflow/prds/{slug}.md`:
+   ```yaml
+   ---
+   status: ready
+   assignee: planner
+   created: YYYY-MM-DD
+   updated: YYYY-MM-DD
+   source_task: "Task title"
+   questions: []
+   ---
+   ```
+6. Update backlog task: `status: done`, add `prd: prds/{slug}.md`
+
+---
+
+## As Planner
+
+When asked to "plan", "create a plan", or given a PRD to work on:
+
+1. Find PRD in `.workflow/prds/` with `status: ready`, `assignee: planner`
+2. Update PRD: `status: in_progress`
+3. Analyze PRD and codebase
+4. Create plan in `.workflow/plans/{slug}.md`:
+   ```yaml
+   ---
+   status: ready
+   assignee: refiner
+   created: YYYY-MM-DD
+   updated: YYYY-MM-DD
+   prd: ../prds/{slug}.md
+   questions: []
+   ---
+   ```
+5. Include: implementation steps (checkboxes), files to modify, testing approach
+6. Update PRD: `status: done`
+
+---
+
+## As Refiner
+
+When asked to "review", "refine", or "check the plan":
+
+1. Find plan in `.workflow/plans/` with `status: ready`, `assignee: refiner`
+2. Update plan: `status: in_progress`
+3. Review for:
+   - Completeness (all acceptance criteria covered)
+   - Technical accuracy (file paths exist, patterns correct)
+   - Edge cases (error handling, validation)
+4. If questions exist, try to answer by investigating codebase
+5. If blocked: `status: blocked`, `assignee: human`
+6. Otherwise: refine plan, set `status: ready`, `assignee: implementer`
+
+---
+
+## As Implementer
+
+When asked to "implement", "build", or "code this":
+
+1. Find plan in `.workflow/plans/` with `status: ready`, `assignee: implementer`
+2. Update plan: `status: in_progress`
+3. Follow plan steps in order, checking off as you go
+4. Write tests following project patterns
+5. Run tests and linting (check `.workflow/config.yaml` for commands)
+6. Use `agent-browser` for UI testing if needed
+7. Commit changes with descriptive message
+8. Update plan: `status: done`
+
+---
+
+## Handling Questions
+
+Any participant can ask questions by:
+1. Adding to the `questions` field in the PRD/plan
+2. Setting `status: blocked`, `assignee: human`
+
+Any participant can answer questions by:
+1. Investigating the codebase
+2. Updating the `questions` field with answers
+3. Setting status back to `ready`
