@@ -17,16 +17,18 @@ You are a workflow conductor. Your job is to orchestrate the workflow by scannin
 
 ### 1. Read Configuration
 
-Read `.workflow/config.yaml` to get orchestration settings:
+Read the file passed as an argument for the configuration or use the default `.workflow/config.yaml` to get orchestration settings:
+
 ```yaml
 orchestration:
-  name: default           # conductor name for logging
+  name: default # conductor name for logging
   phases: [pick, plan, refine, implement]
   max_iterations: 20
   stop_on_first_block: false
 ```
 
-Use defaults if not specified:
+If no file is provided or the default `.workflow/config.yaml` file is not found, use these values as defaults:
+
 - `name`: "default"
 - `phases`: `[pick, plan, refine, implement]`
 - `max_iterations`: 20
@@ -36,11 +38,11 @@ Use defaults if not specified:
 
 Build a work queue by scanning files:
 
-| Phase | Scan For | Location |
-|-------|----------|----------|
-| pick | Tasks with `status: not_started` | `.workflow/backlog.md` |
-| plan | PRDs with `status: ready`, `assignee: planner` | `.workflow/prds/*.md` |
-| refine | Plans with `status: ready`, `assignee: refiner` | `.workflow/plans/*.md` |
+| Phase     | Scan For                                            | Location               |
+| --------- | --------------------------------------------------- | ---------------------- |
+| pick      | Tasks with `status: not_started`                    | `.workflow/backlog.md` |
+| plan      | PRDs with `status: ready`, `assignee: planner`      | `.workflow/prds/*.md`  |
+| refine    | Plans with `status: ready`, `assignee: refiner`     | `.workflow/plans/*.md` |
 | implement | Plans with `status: ready`, `assignee: implementer` | `.workflow/plans/*.md` |
 
 Also count blocked items for reporting.
@@ -48,6 +50,7 @@ Also count blocked items for reporting.
 ### 3. Log Run Start
 
 Append to `.workflow/action-log.md`:
+
 ```markdown
 ## YYYY-MM-DD HH:MM - Conductor Run
 
@@ -63,7 +66,7 @@ Append to `.workflow/action-log.md`:
 iteration = 0
 while iteration < max_iterations:
     work_found = false
-    
+
     for phase in configured_phases:
         item = find_next_unblocked_item_for_phase(phase)
         if item exists:
@@ -71,10 +74,10 @@ while iteration < max_iterations:
             execute_phase(phase, item)
             log_action(phase, item, result)
             break  # re-scan after each action (state changed)
-    
+
     if not work_found:
         break  # no more work available
-    
+
     iteration++
 ```
 
@@ -83,6 +86,7 @@ while iteration < max_iterations:
 For each phase, perform the corresponding agent's workflow inline:
 
 **pick phase:**
+
 1. Find task in backlog with `status: not_started`
 2. Mark as `in_progress`, `assignee: picker`
 3. Analyze codebase for context
@@ -91,6 +95,7 @@ For each phase, perform the corresponding agent's workflow inline:
 6. Log: `[x] pick: {slug} → PRD created`
 
 **plan phase:**
+
 1. Find PRD with `status: ready`, `assignee: planner`
 2. Mark PRD as `in_progress`
 3. Analyze PRD and codebase
@@ -99,6 +104,7 @@ For each phase, perform the corresponding agent's workflow inline:
 6. Log: `[x] plan: {slug} → plan created`
 
 **refine phase:**
+
 1. Find plan with `status: ready`, `assignee: refiner`
 2. Mark plan as `in_progress`
 3. Review plan for completeness, accuracy, edge cases
@@ -107,6 +113,7 @@ For each phase, perform the corresponding agent's workflow inline:
 6. Log: `[x] refine: {slug} → approved` or `[ ] refine: {slug} → blocked (reason)`
 
 **implement phase:**
+
 1. Find plan with `status: ready`, `assignee: implementer`
 2. Mark plan as `in_progress`
 3. Create/checkout branch `feat/{slug}`
@@ -120,6 +127,7 @@ For each phase, perform the corresponding agent's workflow inline:
 ### 6. Handle Blocked Items
 
 When an item cannot proceed:
+
 - Add questions to the item's `questions` field
 - Set `status: blocked` and `assignee: human`
 - Log: `[ ] {phase}: {slug} → blocked ({reason})`
@@ -128,6 +136,7 @@ When an item cannot proceed:
 ### 7. Log Run Completion
 
 Append to the current run entry in `.workflow/action-log.md`:
+
 ```markdown
 - Completed: {N} actions
 - Blocked: {N} items ({list slugs and reasons})
@@ -137,6 +146,7 @@ Append to the current run entry in `.workflow/action-log.md`:
 ### 8. Report Summary
 
 Output a summary to the user:
+
 ```
 Conductor Summary ({name}):
 - Phases: [pick, plan, refine, implement]
@@ -149,6 +159,7 @@ Conductor Summary ({name}):
 ## CLI Arguments
 
 Support these overrides (if provided):
+
 - `--phases {list}`: Override phases for this run (e.g., `--phases pick,plan`)
 - `--slug {slug}`: Only process this specific feature
 - `--name {name}`: Override conductor name for logging
@@ -156,6 +167,7 @@ Support these overrides (if provided):
 ## Git Workflow (implement phase only)
 
 Read git settings from `.workflow/config.yaml`:
+
 ```yaml
 git:
   branch_prefix: "feat/"
