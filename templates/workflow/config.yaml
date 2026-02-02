@@ -11,6 +11,7 @@ paths:
   prds: ".workflow/prds"
   plans: ".workflow/plans"
   questions: ".workflow/questions.md"
+  action_log: ".workflow/action-log.md"
 
 # Agent settings
 agents:
@@ -45,3 +46,24 @@ boundaries:
     - "vendor/**"
     - "dist/**"
     - "build/**"
+
+# Conductor orchestration settings
+orchestration:
+  name: default  # conductor name for action-log tracking (useful when running multiple)
+  
+  # Array of phases to run. Options: pick, plan, refine, implement
+  phases: [pick, plan, refine, implement]  # full pipeline
+  # phases: [pick]                          # pick only
+  # phases: [pick, plan]                    # pick and plan, stop before refine
+  # phases: [plan, implement]               # skip pick, plan existing PRDs and implement
+
+  max_iterations: 20           # safety limit to prevent infinite loops
+  stop_on_first_block: false   # true = stop at first blocked item
+
+# Git settings for implementer
+git:
+  branch_prefix: "feat/"       # prefix for feature branches
+  create_pr: true              # auto-create PR when implementation complete
+  pr_draft: true               # create as draft PR
+  commit_per_step: false       # true = commit after each step, false = batch commits
+  never_merge: true            # safety: agents cannot merge PRs

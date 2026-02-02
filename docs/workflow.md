@@ -6,12 +6,16 @@ A file-based multi-agent workflow system where AI agents and humans work togethe
 
 - [Overview](#overview)
 - [Core Principles](#core-principles)
+- [Tool Compatibility](#tool-compatibility)
 - [Directory Structure](#directory-structure)
 - [Status Lifecycle](#status-lifecycle)
 - [Agents](#agents)
+- [Conductor](#conductor)
 - [File Formats](#file-formats)
 - [Usage](#usage)
 - [Configuration](#configuration)
+- [Git Workflow](#git-workflow)
+- [Parallel Conductors](#parallel-conductors)
 - [Troubleshooting](#troubleshooting)
 
 ---
@@ -44,12 +48,88 @@ All state lives in human-readable markdown files, making the process transparent
 
 ---
 
+## Tool Compatibility
+
+Agent Workflow is designed to work with both **Cursor** and **Claude Code**. The installer sets up both tools.
+
+### Directory Locations
+
+| Purpose | Claude Code | Cursor | Scope |
+|---------|-------------|--------|-------|
+| Agent definitions | `.claude/agents/` | `.cursor/agents/` | Project |
+| Workflow state | `.workflow/` | `.workflow/` | Project |
+| Rules | - | `.cursor/rules/` | Project |
+| Skills | - | `~/.cursor/skills/` | User (global) |
+| Instructions | `CLAUDE.md` or `~/.claude/CLAUDE.md` | - | Project or User |
+
+### What Gets Installed
+
+The installer creates identical agent definitions in both locations:
+
+```
+your-project/
+├── .workflow/              # Shared workflow state
+│   ├── config.yaml
+│   ├── backlog.md
+│   ├── action-log.md
+│   ├── prds/
+│   └── plans/
+├── .claude/agents/         # Claude Code reads from here
+│   ├── picker.md
+│   ├── planner.md
+│   ├── refiner.md
+│   ├── implementer.md
+│   └── conductor.md
+├── .cursor/agents/         # Cursor reads from here
+│   ├── picker.md
+│   ├── planner.md
+│   ├── refiner.md
+│   ├── implementer.md
+│   └── conductor.md
+└── .cursor/rules/
+    └── workflow-agents.mdc
+
+~/.cursor/skills/           # User-level (shared across projects)
+└── feature-workflow/
+    └── SKILL.md
+```
+
+### Using Each Tool
+
+**Claude Code:**
+```bash
+# Invoke agents directly
+claude "Use the picker agent to select the next task"
+claude "Use the conductor agent to run the full pipeline"
+
+# Or use /agent command
+claude /agent picker
+```
+
+**Cursor:**
+```bash
+# Use slash commands (from skill)
+/pick
+/plan user-auth
+/conduct --phases pick,plan
+
+# Or reference agents directly
+@picker select the next task from backlog
+```
+
+### Keeping Tools in Sync
+
+The agent definitions are identical in both `.claude/agents/` and `.cursor/agents/`. If you customize an agent, update both locations or re-run the installer.
+
+---
+
 ## Directory Structure
 
 ```
 .workflow/
 ├── config.yaml              # Project workflow configuration
 ├── backlog.md               # Task backlog (Picker reads from here)
+├── action-log.md            # Conductor audit trail
 ├── questions.md             # Open questions for human review
 ├── prds/                    # PRDs created by Picker
 │   ├── feat-user-auth.md
@@ -167,6 +247,88 @@ At any point, if questions arise → status becomes `blocked`, assignee becomes 
 6. Otherwise, commit changes, set status `done`
 
 **Agent file**: `.claude/agents/implementer.md`
+
+---
+
+## Conductor
+
+The conductor is an orchestration agent that runs other agents in a loop until all work is complete or blocked.
+
+### Purpose
+
+Instead of manually invoking each agent, the conductor:
+- Scans workflow state from files
+- Runs phases in order (pick → plan → refine → implement)
+- Skips blocked items and continues processing
+- Logs all actions to `action-log.md`
+- Reports a summary when done
+
+### Core Principles
+
+- **File-based state**: All state lives in files - single source of truth
+- **Stateless execution**: Fresh context each run, relies only on file state
+- **Skip-blocked-continue**: Blocked items don't stop the loop
+- **Never merge**: Creates PRs but never merges them
+
+### Configuration
+
+Configure the conductor in `.workflow/config.yaml`:
+
+```yaml
+orchestration:
+  name: default                              # conductor name for logging
+  phases: [pick, plan, refine, implement]    # phases to run
+  max_iterations: 20                         # safety limit
+  stop_on_first_block: false                 # continue on blocked items
+```
+
+### Phases
+
+| Phase | Reads | Writes |
+|-------|-------|--------|
+| pick | `backlog: status=not_started` | `PRD: assignee=planner` |
+| plan | `PRD: assignee=planner` | `plan: assignee=refiner` |
+| refine | `plan: assignee=refiner` | `plan: assignee=implementer` |
+| implement | `plan: assignee=implementer` | `plan: status=done`, opens PR |
+
+### Usage
+
+```bash
+# Run full pipeline (uses config default)
+/conduct
+
+# Override phases for this run
+/conduct --phases pick
+/conduct --phases pick,plan
+
+# Run on specific slug only
+/conduct --slug user-auth
+
+# Named conductor (for parallel operation tracking)
+/conduct --name frontend-conductor --phases pick,plan
+```
+
+### Action Log
+
+The conductor logs all actions to `.workflow/action-log.md`:
+
+```markdown
+## 2024-01-15 14:30 - Conductor Run
+
+- Conductor: default
+- Phases: [pick, plan, refine, implement]
+- Initial state: 3 backlog items, 1 PRD ready, 0 plans ready
+- Actions:
+  - [x] pick: user-auth → PRD created
+  - [x] pick: payment-flow → PRD created
+  - [ ] pick: notifications → blocked (question about provider)
+  - [x] plan: user-auth → plan created
+- Completed: 3 actions
+- Blocked: 1 item (notifications - needs human input)
+- Handoff: 1 plan ready for refiner
+```
+
+**Agent file**: `.claude/agents/conductor.md`
 
 ---
 
@@ -333,6 +495,7 @@ paths:
   prds: ".workflow/prds"
   plans: ".workflow/plans"
   questions: ".workflow/questions.md"
+  action_log: ".workflow/action-log.md"
 
 agents:
   picker:
@@ -358,6 +521,116 @@ boundaries:
     - "*.lock"
     - ".git/**"
     - "node_modules/**"
+
+# Conductor orchestration settings
+orchestration:
+  name: default
+  phases: [pick, plan, refine, implement]
+  max_iterations: 20
+  stop_on_first_block: false
+
+# Git settings for implementer
+git:
+  branch_prefix: "feat/"
+  create_pr: true
+  pr_draft: true
+  commit_per_step: false
+  never_merge: true
+```
+
+---
+
+## Git Workflow
+
+The implementer agent follows a strict git workflow:
+
+### Branch Strategy
+
+- One branch per feature: `feat/[slug]`
+- Implementer creates branch if it doesn't exist
+- All commits go to the feature branch
+
+### Commit Behavior
+
+- Commits after completing implementation steps
+- Commit messages reference the plan: `feat(user-auth): implement step 2 - add auth middleware`
+
+### PR Workflow
+
+- Opens PR when feature is complete (draft if configured)
+- **Agents NEVER merge** - only humans (or future review agents) merge
+- PR link is saved to plan frontmatter
+
+### Configuration
+
+```yaml
+git:
+  branch_prefix: "feat/"       # prefix for feature branches
+  create_pr: true              # auto-create PR when implementation complete
+  pr_draft: true               # create as draft PR
+  commit_per_step: false       # true = commit after each step, false = batch commits
+  never_merge: true            # safety: agents cannot merge PRs
+```
+
+---
+
+## Parallel Conductors
+
+Multiple conductors can run in parallel when assigned **different phases**.
+
+### Phase Isolation
+
+Each phase reads and writes different status/assignee combinations, so there are no conflicts:
+
+| Phase | Reads status | Writes status | Safe to parallelize with |
+|-------|--------------|---------------|--------------------------|
+| pick | `backlog: not_started` | `PRD: assignee=planner` | plan, refine, implement |
+| plan | `PRD: assignee=planner` | `plan: assignee=refiner` | pick, refine, implement |
+| refine | `plan: assignee=refiner` | `plan: assignee=implementer` | pick, plan, implement |
+| implement | `plan: assignee=implementer` | `plan: status=done` | pick, plan, refine |
+
+### Rules
+
+- Each phase should only run on ONE conductor at a time
+- Multiple conductors with different phases can run in parallel
+- The `action-log.md` tracks which conductor ran which phases
+
+### Example Setup
+
+```bash
+# Terminal 1: Pick and plan
+/conduct --name frontend --phases pick,plan
+
+# Terminal 2: Review
+/conduct --name reviewer --phases refine
+
+# Terminal 3: Build
+/conduct --name builder --phases implement
+```
+
+### Example Configurations
+
+```yaml
+# Single conductor - all phases (default)
+orchestration:
+  name: default
+  phases: [pick, plan, refine, implement]
+
+# Split across conductors
+# conductor-frontend.yaml
+orchestration:
+  name: frontend
+  phases: [pick, plan]
+
+# conductor-review.yaml
+orchestration:
+  name: reviewer
+  phases: [refine]
+
+# conductor-build.yaml
+orchestration:
+  name: builder
+  phases: [implement]
 ```
 
 ---

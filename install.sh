@@ -206,8 +206,10 @@ fi
 log_info "Creating directory structure..."
 mkdir -p .workflow/prds
 mkdir -p .workflow/plans
-mkdir -p .claude/agents
+mkdir -p .claude/agents      # Claude Code agents (project-level)
+mkdir -p .cursor/agents      # Cursor agents (project-level)
 mkdir -p .cursor/rules
+mkdir -p "$HOME/.cursor/skills/feature-workflow"  # Cursor skills (user-level)
 
 # Track failures
 FAILURES=0
@@ -217,19 +219,25 @@ log_info "Getting workflow templates..."
 get_file "templates/workflow/config.yaml" ".workflow/config.yaml" || ((FAILURES++))
 get_file "templates/workflow/backlog.md" ".workflow/backlog.md" || ((FAILURES++))
 get_file "templates/workflow/questions.md" ".workflow/questions.md" || ((FAILURES++))
+get_file "templates/workflow/action-log.md" ".workflow/action-log.md" || ((FAILURES++))
 touch .workflow/prds/.gitkeep
 touch .workflow/plans/.gitkeep
 
-# Download/copy Claude agents
-log_info "Getting Claude agent definitions..."
-get_file "templates/claude-agents/picker.md" ".claude/agents/picker.md" || ((FAILURES++))
-get_file "templates/claude-agents/planner.md" ".claude/agents/planner.md" || ((FAILURES++))
-get_file "templates/claude-agents/refiner.md" ".claude/agents/refiner.md" || ((FAILURES++))
-get_file "templates/claude-agents/implementer.md" ".claude/agents/implementer.md" || ((FAILURES++))
+# Download/copy agent definitions
+# Install to BOTH .claude/agents (Claude Code) AND .cursor/agents (Cursor)
+log_info "Getting agent definitions..."
+for agent in picker planner refiner implementer conductor; do
+    get_file "templates/claude-agents/$agent.md" ".claude/agents/$agent.md" || ((FAILURES++))
+    cp ".claude/agents/$agent.md" ".cursor/agents/$agent.md" 2>/dev/null || true
+done
 
 # Download/copy Cursor rules
 log_info "Getting Cursor rules..."
 get_file "templates/cursor-rules/workflow-agents.mdc" ".cursor/rules/workflow-agents.mdc" || ((FAILURES++))
+
+# Download/copy Cursor skill (user-level)
+log_info "Installing Cursor skill to ~/.cursor/skills/..."
+get_file "templates/cursor-skills/feature-workflow/SKILL.md" "$HOME/.cursor/skills/feature-workflow/SKILL.md" || ((FAILURES++))
 
 # Check for failures
 if [[ $FAILURES -gt 0 ]]; then
@@ -338,13 +346,19 @@ echo ""
 log_success "Agent workflow installed successfully!"
 echo ""
 echo "Directory structure created:"
-echo "  .workflow/           - Workflow state files"
-echo "  .claude/agents/      - Claude Code agent definitions"
-echo "  .cursor/rules/       - Cursor workflow rules"
+echo "  .workflow/              - Workflow state files"
+echo "  .claude/agents/         - Claude Code agent definitions"
+echo "  .cursor/agents/         - Cursor agent definitions"
+echo "  .cursor/rules/          - Cursor workflow rules"
+echo "  ~/.cursor/skills/       - Cursor skills (user-level)"
+echo ""
+echo "Agents installed: picker, planner, refiner, implementer, conductor"
 echo ""
 echo "Next steps:"
 echo "  1. Edit .workflow/config.yaml to verify/customize commands"
 echo "  2. Add tasks to .workflow/backlog.md"
-echo "  3. Run: claude \"Use the picker agent to start\""
+echo "  3. Use one of:"
+echo "     - Claude Code: claude \"Use the picker agent to start\""
+echo "     - Cursor: /pick or /conduct"
 echo ""
 echo "Documentation: https://github.com/$REPO"

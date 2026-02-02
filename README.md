@@ -1,6 +1,6 @@
 # Agent Workflow
 
-A file-based multi-agent workflow system where AI agents (Picker, Planner, Refiner, Implementer) and humans work together on software tasks. Compatible with **Claude Code** and **Cursor**.
+A file-based multi-agent workflow system where AI agents (Picker, Planner, Refiner, Implementer, Conductor) and humans work together on software tasks. Compatible with **Claude Code** and **Cursor**.
 
 ## Quick Install
 
@@ -23,6 +23,7 @@ your-project/
 ├── .workflow/
 │   ├── config.yaml      # Workflow configuration
 │   ├── backlog.md       # Task backlog
+│   ├── action-log.md    # Conductor audit trail
 │   ├── questions.md     # Open questions tracker
 │   ├── prds/            # PRD documents
 │   └── plans/           # Implementation plans
@@ -30,9 +31,15 @@ your-project/
 │   ├── picker.md
 │   ├── planner.md
 │   ├── refiner.md
-│   └── implementer.md
+│   ├── implementer.md
+│   └── conductor.md
+├── .cursor/agents/      # Cursor agent definitions (same as above)
 └── .cursor/rules/       # Cursor workflow rules
     └── workflow-agents.mdc
+
+~/.cursor/skills/        # User-level (global)
+└── feature-workflow/
+    └── SKILL.md
 ```
 
 ## How It Works
@@ -58,6 +65,7 @@ Each stage uses **status markers** in files:
 | **Planner** | Takes PRDs, creates detailed implementation plans |
 | **Refiner** | Reviews plans, catches issues, asks/answers questions |
 | **Implementer** | Executes plans, writes code and tests, commits |
+| **Conductor** | Orchestrates all phases in a loop until complete or blocked |
 
 ### Human + AI Collaboration
 
@@ -71,30 +79,30 @@ The workflow is designed so **humans and AI are interchangeable**:
 ### With Claude Code
 
 ```bash
-# Pick a task and create a PRD
+# Manual mode - step by step
 claude "Use the picker agent to select the next task from backlog"
-
-# Create an implementation plan
 claude "Use the planner agent to create a plan for the ready PRD"
-
-# Review and refine the plan
 claude "Use the refiner agent to review the ready plan"
-
-# Implement the plan
 claude "Use the implementer agent to implement the ready plan"
+
+# Conductor mode - automated
+claude "Use the conductor agent to run the full pipeline"
+claude "Use the conductor agent with phases pick,plan only"
 ```
 
 ### With Cursor
 
-In Cursor chat:
-```
-Pick the next task from backlog and create a PRD
+```bash
+# Manual mode - slash commands
+/pick
+/plan user-auth
+/refine user-auth
+/implement user-auth
 
-Create an implementation plan for the ready PRD
-
-Review and refine the ready plan
-
-Implement the ready plan
+# Conductor mode - automated
+/conduct                          # Run full pipeline
+/conduct --phases pick,plan       # Run specific phases
+/conduct --slug user-auth         # Process specific feature
 ```
 
 ### As a Human
@@ -151,6 +159,9 @@ questions: []
 
 See [docs/workflow.md](docs/workflow.md) for complete documentation including:
 - Detailed agent instructions
+- Conductor orchestration and parallel conductors
+- Git workflow (branches, PRs)
+- Tool compatibility (Claude Code vs Cursor)
 - File format specifications
 - Status transition diagrams
 - Troubleshooting guide
