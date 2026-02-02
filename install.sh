@@ -36,6 +36,7 @@ LOCAL_MODE=false
 TARGET_DIR="."
 EDITORS="both"        # claude | cursor | both
 LINK_MODE="copy"      # copy | symlink
+RESET_WORKFLOW=false
 EDITORS_SET=false
 LINK_MODE_SET=false
 
@@ -82,13 +83,18 @@ while [[ $# -gt 0 ]]; do
             LINK_MODE_SET=true
             shift
             ;;
+        --reset)
+            RESET_WORKFLOW=true
+            shift
+            ;;
         --help|-h)
-            echo "Usage: $0 [--local] [--editors claude|cursor|both] [--link-mode copy|symlink] [target_directory]"
+            echo "Usage: $0 [--local] [--editors claude|cursor|both] [--link-mode copy|symlink] [--reset] [target_directory]"
             echo ""
             echo "Options:"
             echo "  --local, -l    Use local templates instead of downloading from GitHub"
             echo "  --editors, -e  Install for: claude, cursor, or both (default: both)"
             echo "  --link-mode, -m  Agent install mode: copy or symlink (default: copy)"
+            echo "  --reset        Reset .workflow (always backs up existing state)"
             echo "  --help, -h     Show this help message"
             echo ""
             echo "Examples:"
@@ -98,6 +104,7 @@ while [[ $# -gt 0 ]]; do
             echo "  $0 --local ../myproject # Install in target using local templates"
             echo "  $0 --editors cursor     # Install only Cursor agents and rules"
             echo "  $0 --editors both --link-mode symlink"
+            echo "  $0 --reset              # Reset .workflow (backup first)"
             exit 0
             ;;
         *)
@@ -262,28 +269,36 @@ if [[ "$LINK_MODE" == "symlink" && "$EDITORS" != "both" ]]; then
     LINK_MODE="copy"
 fi
 
-# Check for existing installation
+# Check for existing workflow state
+INSTALL_WORKFLOW=true
 if [[ -d ".workflow" ]]; then
-    log_warn ".workflow directory already exists"
-    # If running non-interactively (piped), skip prompt
-    if [[ -t 0 ]]; then
-        read -p "Overwrite existing installation? [y/N] " -n 1 -r
-        echo
-        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            log_info "Installation cancelled"
-            exit 0
+    if [[ "$RESET_WORKFLOW" == true ]]; then
+        log_warn ".workflow directory already exists"
+        if [[ -t 0 ]]; then
+            read -p "Reset .workflow and backup existing state? [y/N] " -n 1 -r
+            echo
+            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+                log_info "Skipping .workflow reset"
+                INSTALL_WORKFLOW=false
+            fi
+        fi
+        if [[ "$INSTALL_WORKFLOW" == true ]]; then
+            backup_dir=".workflow.bak.$(date +%Y%m%d%H%M%S)"
+            log_info "Backing up existing .workflow to $backup_dir"
+            mv .workflow "$backup_dir"
         fi
     else
-        log_warn "Running non-interactively, backing up existing .workflow to .workflow.bak"
-        rm -rf .workflow.bak
-        mv .workflow .workflow.bak
+        log_info ".workflow already exists; leaving workflow state untouched (use --reset to replace)"
+        INSTALL_WORKFLOW=false
     fi
 fi
 
 # Create directory structure
 log_info "Creating directory structure..."
-mkdir -p .workflow/prds
-mkdir -p .workflow/plans
+if [[ "$INSTALL_WORKFLOW" == true ]]; then
+    mkdir -p .workflow/prds
+    mkdir -p .workflow/plans
+fi
 if [[ "$EDITORS" == "claude" || "$EDITORS" == "both" ]]; then
     mkdir -p .claude/agents      # Claude Code agents (project-level)
 fi
@@ -300,13 +315,15 @@ fi
 FAILURES=0
 
 # Download/copy workflow templates
-log_info "Getting workflow templates..."
-get_file "templates/workflow/config.yaml" ".workflow/config.yaml" || ((FAILURES++))
-get_file "templates/workflow/backlog.md" ".workflow/backlog.md" || ((FAILURES++))
-get_file "templates/workflow/questions.md" ".workflow/questions.md" || ((FAILURES++))
-get_file "templates/workflow/action-log.md" ".workflow/action-log.md" || ((FAILURES++))
-touch .workflow/prds/.gitkeep
-touch .workflow/plans/.gitkeep
+if [[ "$INSTALL_WORKFLOW" == true ]]; then
+    log_info "Getting workflow templates..."
+    get_file "templates/workflow/config.yaml" ".workflow/config.yaml" || ((FAILURES++))
+    get_file "templates/workflow/backlog.md" ".workflow/backlog.md" || ((FAILURES++))
+    get_file "templates/workflow/questions.md" ".workflow/questions.md" || ((FAILURES++))
+    get_file "templates/workflow/action-log.md" ".workflow/action-log.md" || ((FAILURES++))
+    touch .workflow/prds/.gitkeep
+    touch .workflow/plans/.gitkeep
+fi
 
 # Download/copy agent definitions
 log_info "Getting agent definitions..."
@@ -430,27 +447,35 @@ detect_project() {
     fi
     
     # Update config with detected commands (only if detected)
-    if [[ -n "$test_cmd" ]]; then
-        sed_inplace "s|test: \"npm test\"|test: \"$test_cmd\"|" .workflow/config.yaml 2>/dev/null || true
-    fi
-    if [[ -n "$lint_cmd" ]]; then
-        sed_inplace "s|lint: \"npm run lint\"|lint: \"$lint_cmd\"|" .workflow/config.yaml 2>/dev/null || true
-    fi
-    if [[ -n "$build_cmd" ]]; then
-        sed_inplace "s|build: \"npm run build\"|build: \"$build_cmd\"|" .workflow/config.yaml 2>/dev/null || true
+    if [[ "$INSTALL_WORKFLOW" == true ]]; then
+        if [[ -n "$test_cmd" ]]; then
+            sed_inplace "s|test: \"npm test\"|test: \"$test_cmd\"|" .workflow/config.yaml 2>/dev/null || true
+        fi
+        if [[ -n "$lint_cmd" ]]; then
+            sed_inplace "s|lint: \"npm run lint\"|lint: \"$lint_cmd\"|" .workflow/config.yaml 2>/dev/null || true
+        fi
+        if [[ -n "$build_cmd" ]]; then
+            sed_inplace "s|build: \"npm run build\"|build: \"$build_cmd\"|" .workflow/config.yaml 2>/dev/null || true
+        fi
     fi
 }
 
 detect_project
 
 # Update config with project name
-sed_inplace "s|name: \"My Project\"|name: \"$PROJECT_NAME\"|" .workflow/config.yaml 2>/dev/null || true
+if [[ "$INSTALL_WORKFLOW" == true ]]; then
+    sed_inplace "s|name: \"My Project\"|name: \"$PROJECT_NAME\"|" .workflow/config.yaml 2>/dev/null || true
+fi
 
 echo ""
 log_success "Agentflow installed successfully!"
 echo ""
 echo "Directory structure created:"
-echo "  .workflow/              - Workflow state files"
+if [[ "$INSTALL_WORKFLOW" == true ]]; then
+    echo "  .workflow/              - Workflow state files"
+else
+    echo "  .workflow/              - Workflow state files (preserved)"
+fi
 if [[ "$EDITORS" == "claude" || "$EDITORS" == "both" ]]; then
     echo "  .claude/agents/         - Claude Code agent definitions"
 fi
@@ -463,8 +488,12 @@ echo ""
 echo "Agents installed: picker, planner, refiner, implementer, conductor"
 echo ""
 echo "Next steps:"
-echo "  1. Edit config file (typically .workflow/config.yaml) to verify/customize commands and paths"
-echo "  2. Add tasks to backlog file (default: .workflow/backlog.md; configurable in config.yaml)"
+if [[ "$INSTALL_WORKFLOW" == true ]]; then
+    echo "  1. Edit config file (typically .workflow/config.yaml) to verify/customize commands and paths"
+    echo "  2. Add tasks to backlog file (default: .workflow/backlog.md; configurable in config.yaml)"
+else
+    echo "  1. Review existing workflow config and backlog files as needed"
+fi
 echo "  3. Use one of:"
 echo "     - Claude Code: claude \"Use the picker agent to start\""
 echo "     - Cursor: /pick or /conduct"
