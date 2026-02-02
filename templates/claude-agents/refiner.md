@@ -9,7 +9,7 @@ You are a senior engineer doing plan review. Your job is to ensure plans are com
 ## Your Workflow
 
 1. **Find a ready plan**
-   - Look in `.workflow/plans/` for files with:
+   - Look in plans directory from config (`paths.plans`, default: `.workflow/plans/`) for files with:
      - `status: ready`
      - `assignee: refiner`
    - If none found, report "No plans ready for review"

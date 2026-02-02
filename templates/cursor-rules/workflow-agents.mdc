@@ -5,7 +5,7 @@ globs: [".workflow/**"]
 
 # Multi-Agent Workflow Rules
 
-This repository uses a file-based workflow system where agents and humans work together on tasks. All workflow state lives in `.workflow/`.
+This repository uses a file-based workflow system where agents and humans work together on tasks. All workflow state lives in the workflow directory (configured in `paths` section of the config, default: `.workflow/`).
 
 See https://github.com/miguelalcalde/agentworkflow for complete documentation.
 
@@ -20,7 +20,8 @@ See https://github.com/miguelalcalde/agentworkflow for complete documentation.
 | `blocked` | Has unanswered questions (assignee: human) |
 | `done` | Completed |
 
-## Workflow Directory Structure
+## Workflow Directory Structure (defaults)
+Locations are configurable via `paths` in config.
 
 ```
 .workflow/
@@ -37,11 +38,11 @@ See https://github.com/miguelalcalde/agentworkflow for complete documentation.
 
 When asked to "pick a task", "start new work", or "create a PRD":
 
-1. Read `.workflow/backlog.md`
+1. Read backlog file (from `paths.backlog`, default: `.workflow/backlog.md`)
 2. Find first task with `status: not_started`
 3. Update task: `status: in_progress`, `assignee: picker`
 4. Analyze the codebase for context
-5. Create PRD in `.workflow/prds/{slug}.md`:
+5. Create PRD in `{paths.prds}/{slug}.md` (from config, default: `.workflow/prds/{slug}.md`):
    ```yaml
    ---
    status: ready
@@ -60,10 +61,10 @@ When asked to "pick a task", "start new work", or "create a PRD":
 
 When asked to "plan", "create a plan", or given a PRD to work on:
 
-1. Find PRD in `.workflow/prds/` with `status: ready`, `assignee: planner`
+1. Find PRD in PRDs directory (from `paths.prds`, default: `.workflow/prds/`) with `status: ready`, `assignee: planner`
 2. Update PRD: `status: in_progress`
 3. Analyze PRD and codebase
-4. Create plan in `.workflow/plans/{slug}.md`:
+4. Create plan in `{paths.plans}/{slug}.md` (from config, default: `.workflow/plans/{slug}.md`):
    ```yaml
    ---
    status: ready
@@ -83,7 +84,7 @@ When asked to "plan", "create a plan", or given a PRD to work on:
 
 When asked to "review", "refine", or "check the plan":
 
-1. Find plan in `.workflow/plans/` with `status: ready`, `assignee: refiner`
+1. Find plan in plans directory (from `paths.plans`, default: `.workflow/plans/`) with `status: ready`, `assignee: refiner`
 2. Update plan: `status: in_progress`
 3. Review for:
    - Completeness (all acceptance criteria covered)
@@ -99,11 +100,11 @@ When asked to "review", "refine", or "check the plan":
 
 When asked to "implement", "build", or "code this":
 
-1. Find plan in `.workflow/plans/` with `status: ready`, `assignee: implementer`
+1. Find plan in plans directory (from `paths.plans`, default: `.workflow/plans/`) with `status: ready`, `assignee: implementer`
 2. Update plan: `status: in_progress`
 3. Follow plan steps in order, checking off as you go
 4. Write tests following project patterns
-5. Run tests and linting (check `.workflow/config.yaml` for commands)
+5. Run tests and linting (check config file for commands)
 6. Use `agent-browser` for UI testing if needed
 7. Commit changes with descriptive message
 8. Update plan: `status: done`

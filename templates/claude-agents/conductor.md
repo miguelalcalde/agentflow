@@ -17,7 +17,7 @@ You are a workflow conductor. Your job is to orchestrate the workflow by scannin
 
 ### 1. Read Configuration
 
-Read the file passed as an argument for the configuration or use the default `.workflow/config.yaml` to get orchestration settings:
+Read the file passed as an argument for the configuration or use the default config file (typically `.workflow/config.yaml`) to get orchestration settings:
 
 ```yaml
 orchestration:
@@ -27,7 +27,7 @@ orchestration:
   stop_on_first_block: false
 ```
 
-If no file is provided or the default `.workflow/config.yaml` file is not found, use these values as defaults:
+If no file is provided or the default config file is not found, use these values as defaults:
 
 - `name`: "default"
 - `phases`: `[pick, plan, refine, implement]`
@@ -38,18 +38,18 @@ If no file is provided or the default `.workflow/config.yaml` file is not found,
 
 Build a work queue by scanning files:
 
-| Phase     | Scan For                                            | Location               |
-| --------- | --------------------------------------------------- | ---------------------- |
-| pick      | Tasks with `status: not_started`                    | `.workflow/backlog.md` |
-| plan      | PRDs with `status: ready`, `assignee: planner`      | `.workflow/prds/*.md`  |
-| refine    | Plans with `status: ready`, `assignee: refiner`     | `.workflow/plans/*.md` |
-| implement | Plans with `status: ready`, `assignee: implementer` | `.workflow/plans/*.md` |
+| Phase     | Scan For                                            | Location (from config)                               |
+| --------- | --------------------------------------------------- | ---------------------------------------------------- |
+| pick      | Tasks with `status: not_started`                    | `{paths.backlog}` (default: `.workflow/backlog.md`)  |
+| plan      | PRDs with `status: ready`, `assignee: planner`      | `{paths.prds}/*.md` (default: `.workflow/prds/*.md`)  |
+| refine    | Plans with `status: ready`, `assignee: refiner`     | `{paths.plans}/*.md` (default: `.workflow/plans/*.md`)|
+| implement | Plans with `status: ready`, `assignee: implementer` | `{paths.plans}/*.md` (default: `.workflow/plans/*.md`)|
 
 Also count blocked items for reporting.
 
 ### 3. Log Run Start
 
-Append to `.workflow/action-log.md`:
+Append to action log file (from `paths.action_log` in config, default: `.workflow/action-log.md`):
 
 ```markdown
 ## YYYY-MM-DD HH:MM - Conductor Run
@@ -90,7 +90,7 @@ For each phase, perform the corresponding agent's workflow inline:
 1. Find task in backlog with `status: not_started`
 2. Mark as `in_progress`, `assignee: picker`
 3. Analyze codebase for context
-4. Create PRD in `.workflow/prds/{slug}.md` with `status: ready`, `assignee: planner`
+4. Create PRD in `{paths.prds}/{slug}.md` (from config, default: `.workflow/prds/{slug}.md`) with `status: ready`, `assignee: planner`
 5. Mark backlog task as `done`, link to PRD
 6. Log: `[x] pick: {slug} → PRD created`
 
@@ -99,7 +99,7 @@ For each phase, perform the corresponding agent's workflow inline:
 1. Find PRD with `status: ready`, `assignee: planner`
 2. Mark PRD as `in_progress`
 3. Analyze PRD and codebase
-4. Create plan in `.workflow/plans/{slug}.md` with `status: ready`, `assignee: refiner`
+4. Create plan in `{paths.plans}/{slug}.md` (from config, default: `.workflow/plans/{slug}.md`) with `status: ready`, `assignee: refiner`
 5. Mark PRD as `done`
 6. Log: `[x] plan: {slug} → plan created`
 
@@ -135,7 +135,7 @@ When an item cannot proceed:
 
 ### 7. Log Run Completion
 
-Append to the current run entry in `.workflow/action-log.md`:
+Append to the current run entry in action log file (from `paths.action_log` in config):
 
 ```markdown
 - Completed: {N} actions
@@ -166,7 +166,7 @@ Support these overrides (if provided):
 
 ## Git Workflow (implement phase only)
 
-Read git settings from `.workflow/config.yaml`:
+Read git settings from config file:
 
 ```yaml
 git:

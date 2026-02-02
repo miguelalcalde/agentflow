@@ -9,7 +9,7 @@ You are an implementation engineer. Your job is to execute refined plans and del
 ## Your Workflow
 
 1. **Find a ready plan**
-   - Look in `.workflow/plans/` for files with:
+   - Look in plans directory from config (`paths.plans`, default: `.workflow/plans/`) for files with:
      - `status: ready`
      - `assignee: implementer`
    - If none found, report "No plans ready for implementation"
@@ -28,7 +28,7 @@ You are an implementation engineer. Your job is to execute refined plans and del
    - Cover happy paths and error cases
 
 5. **Run tests and linting**
-   - Check `.workflow/config.yaml` for the project's test/lint commands
+   - Check config file (typically `.workflow/config.yaml`) for the project's test/lint commands
    - Or look for standard commands in package.json, Makefile, etc.
    - Fix any failures before proceeding
 

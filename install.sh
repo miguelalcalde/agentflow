@@ -34,6 +34,10 @@ NC='\033[0m' # No Color
 # Defaults
 LOCAL_MODE=false
 TARGET_DIR="."
+EDITORS="both"        # claude | cursor | both
+LINK_MODE="copy"      # copy | symlink
+EDITORS_SET=false
+LINK_MODE_SET=false
 
 log_info() {
     echo -e "${BLUE}[INFO]${NC} $*"
@@ -58,11 +62,33 @@ while [[ $# -gt 0 ]]; do
             LOCAL_MODE=true
             shift
             ;;
+        --editors|-e)
+            EDITORS="${2:-}"
+            EDITORS_SET=true
+            shift 2
+            ;;
+        --editors=*)
+            EDITORS="${1#*=}"
+            EDITORS_SET=true
+            shift
+            ;;
+        --link-mode|--link|-m)
+            LINK_MODE="${2:-}"
+            LINK_MODE_SET=true
+            shift 2
+            ;;
+        --link-mode=*|--link=*)
+            LINK_MODE="${1#*=}"
+            LINK_MODE_SET=true
+            shift
+            ;;
         --help|-h)
-            echo "Usage: $0 [--local] [target_directory]"
+            echo "Usage: $0 [--local] [--editors claude|cursor|both] [--link-mode copy|symlink] [target_directory]"
             echo ""
             echo "Options:"
             echo "  --local, -l    Use local templates instead of downloading from GitHub"
+            echo "  --editors, -e  Install for: claude, cursor, or both (default: both)"
+            echo "  --link-mode, -m  Agent install mode: copy or symlink (default: copy)"
             echo "  --help, -h     Show this help message"
             echo ""
             echo "Examples:"
@@ -70,6 +96,8 @@ while [[ $# -gt 0 ]]; do
             echo "  $0 /path/to/project     # Install in target directory (remote)"
             echo "  $0 --local              # Install using local templates"
             echo "  $0 --local ../myproject # Install in target using local templates"
+            echo "  $0 --editors cursor     # Install only Cursor agents and rules"
+            echo "  $0 --editors both --link-mode symlink"
             exit 0
             ;;
         *)
@@ -184,6 +212,56 @@ if [[ "$LOCAL_MODE" == true ]]; then
     log_info "Using local templates from: $SCRIPT_DIR"
 fi
 
+# Interactive prompts (TTY only)
+if [[ -t 0 ]]; then
+    if [[ "$EDITORS_SET" == false ]]; then
+        echo ""
+        echo "Select editors to install for:"
+        echo "  1) both (default)"
+        echo "  2) claude"
+        echo "  3) cursor"
+        read -r -p "Choose [1-3]: " editors_choice
+        case "$editors_choice" in
+            2) EDITORS="claude" ;;
+            3) EDITORS="cursor" ;;
+            *) EDITORS="both" ;;
+        esac
+    fi
+    if [[ "$LINK_MODE_SET" == false ]]; then
+        echo ""
+        echo "Select agent install mode:"
+        echo "  1) copy (default)"
+        echo "  2) symlink (one set of agents)"
+        read -r -p "Choose [1-2]: " link_choice
+        case "$link_choice" in
+            2) LINK_MODE="symlink" ;;
+            *) LINK_MODE="copy" ;;
+        esac
+    fi
+fi
+
+# Normalize and validate options
+case "$EDITORS" in
+    claude|cursor|both) ;;
+    *)
+        log_warn "Invalid --editors value '$EDITORS', defaulting to both"
+        EDITORS="both"
+        ;;
+esac
+
+case "$LINK_MODE" in
+    copy|symlink) ;;
+    *)
+        log_warn "Invalid --link-mode value '$LINK_MODE', defaulting to copy"
+        LINK_MODE="copy"
+        ;;
+esac
+
+if [[ "$LINK_MODE" == "symlink" && "$EDITORS" != "both" ]]; then
+    log_warn "Symlink mode requires both editors; falling back to copy"
+    LINK_MODE="copy"
+fi
+
 # Check for existing installation
 if [[ -d ".workflow" ]]; then
     log_warn ".workflow directory already exists"
@@ -206,10 +284,17 @@ fi
 log_info "Creating directory structure..."
 mkdir -p .workflow/prds
 mkdir -p .workflow/plans
-mkdir -p .claude/agents      # Claude Code agents (project-level)
-mkdir -p .cursor/agents      # Cursor agents (project-level)
-mkdir -p .cursor/rules
-mkdir -p "$HOME/.cursor/skills/feature-workflow"  # Cursor skills (user-level)
+if [[ "$EDITORS" == "claude" || "$EDITORS" == "both" ]]; then
+    mkdir -p .claude/agents      # Claude Code agents (project-level)
+fi
+if [[ "$EDITORS" == "cursor" || "$EDITORS" == "both" ]]; then
+    mkdir -p .cursor
+    if [[ "$LINK_MODE" == "copy" ]]; then
+        mkdir -p .cursor/agents  # Cursor agents (project-level)
+    fi
+    mkdir -p .cursor/rules
+    mkdir -p "$HOME/.cursor/skills/feature-workflow"  # Cursor skills (user-level)
+fi
 
 # Track failures
 FAILURES=0
@@ -224,20 +309,39 @@ touch .workflow/prds/.gitkeep
 touch .workflow/plans/.gitkeep
 
 # Download/copy agent definitions
-# Install to BOTH .claude/agents (Claude Code) AND .cursor/agents (Cursor)
 log_info "Getting agent definitions..."
 for agent in picker planner refiner implementer conductor; do
-    get_file "templates/claude-agents/$agent.md" ".claude/agents/$agent.md" || ((FAILURES++))
-    cp ".claude/agents/$agent.md" ".cursor/agents/$agent.md" 2>/dev/null || true
+    if [[ "$EDITORS" == "claude" || "$EDITORS" == "both" ]]; then
+        get_file "templates/claude-agents/$agent.md" ".claude/agents/$agent.md" || ((FAILURES++))
+    fi
+    if [[ "$EDITORS" == "cursor" ]]; then
+        get_file "templates/claude-agents/$agent.md" ".cursor/agents/$agent.md" || ((FAILURES++))
+    fi
+    if [[ "$EDITORS" == "both" && "$LINK_MODE" == "copy" ]]; then
+        cp ".claude/agents/$agent.md" ".cursor/agents/$agent.md" 2>/dev/null || true
+    fi
 done
 
+if [[ "$EDITORS" == "both" && "$LINK_MODE" == "symlink" ]]; then
+    if [[ -L ".cursor/agents" || -d ".cursor/agents" ]]; then
+        rm -r ".cursor/agents" 2>/dev/null || true
+    elif [[ -f ".cursor/agents" ]]; then
+        rm ".cursor/agents" 2>/dev/null || true
+    fi
+    ln -s "../.claude/agents" ".cursor/agents"
+fi
+
 # Download/copy Cursor rules
-log_info "Getting Cursor rules..."
-get_file "templates/cursor-rules/workflow-agents.mdc" ".cursor/rules/workflow-agents.mdc" || ((FAILURES++))
+if [[ "$EDITORS" == "cursor" || "$EDITORS" == "both" ]]; then
+    log_info "Getting Cursor rules..."
+    get_file "templates/cursor-rules/workflow-agents.mdc" ".cursor/rules/workflow-agents.mdc" || ((FAILURES++))
+fi
 
 # Download/copy Cursor skill (user-level)
-log_info "Installing Cursor skill to ~/.cursor/skills/..."
-get_file "templates/cursor-skills/feature-workflow/SKILL.md" "$HOME/.cursor/skills/feature-workflow/SKILL.md" || ((FAILURES++))
+if [[ "$EDITORS" == "cursor" || "$EDITORS" == "both" ]]; then
+    log_info "Installing Cursor skill to ~/.cursor/skills/..."
+    get_file "templates/cursor-skills/feature-workflow/SKILL.md" "$HOME/.cursor/skills/feature-workflow/SKILL.md" || ((FAILURES++))
+fi
 
 # Check for failures
 if [[ $FAILURES -gt 0 ]]; then
@@ -347,16 +451,20 @@ log_success "Agent workflow installed successfully!"
 echo ""
 echo "Directory structure created:"
 echo "  .workflow/              - Workflow state files"
-echo "  .claude/agents/         - Claude Code agent definitions"
-echo "  .cursor/agents/         - Cursor agent definitions"
-echo "  .cursor/rules/          - Cursor workflow rules"
-echo "  ~/.cursor/skills/       - Cursor skills (user-level)"
+if [[ "$EDITORS" == "claude" || "$EDITORS" == "both" ]]; then
+    echo "  .claude/agents/         - Claude Code agent definitions"
+fi
+if [[ "$EDITORS" == "cursor" || "$EDITORS" == "both" ]]; then
+    echo "  .cursor/agents/         - Cursor agent definitions ($LINK_MODE)"
+    echo "  .cursor/rules/          - Cursor workflow rules"
+    echo "  ~/.cursor/skills/       - Cursor skills (user-level)"
+fi
 echo ""
 echo "Agents installed: picker, planner, refiner, implementer, conductor"
 echo ""
 echo "Next steps:"
-echo "  1. Edit .workflow/config.yaml to verify/customize commands"
-echo "  2. Add tasks to .workflow/backlog.md"
+echo "  1. Edit config file (typically .workflow/config.yaml) to verify/customize commands and paths"
+echo "  2. Add tasks to backlog file (default: .workflow/backlog.md; configurable in config.yaml)"
 echo "  3. Use one of:"
 echo "     - Claude Code: claude \"Use the picker agent to start\""
 echo "     - Cursor: /pick or /conduct"

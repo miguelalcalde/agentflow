@@ -16,11 +16,11 @@ cd agentworkflow
 ./install.sh /path/to/your/project
 ```
 
-## What Gets Installed
+## What Gets Installed (defaults)
 
 ```
 your-project/
-├── .workflow/
+├── .workflow/           # Default workflow location (configurable via config.yaml paths)
 │   ├── config.yaml      # Workflow configuration
 │   ├── backlog.md       # Task backlog
 │   ├── action-log.md    # Conductor audit trail
@@ -108,14 +108,14 @@ claude "Use the conductor agent with phases pick,plan only"
 ### As a Human
 
 Just edit the files directly:
-1. Add tasks to `.workflow/backlog.md`
+1. Add tasks to backlog file from config (`paths.backlog`, default: `.workflow/backlog.md`)
 2. Change `status` and `assignee` fields to advance work
 3. Answer questions in PRD/plan files
 4. Review and approve before implementation
 
 ## Configuration
 
-Edit `.workflow/config.yaml` to customize:
+Edit the config file (typically `.workflow/config.yaml`) to customize:
 
 ```yaml
 workflow:

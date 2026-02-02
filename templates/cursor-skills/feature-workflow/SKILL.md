@@ -36,11 +36,11 @@ Backlog → /pick → PRD → /refine → PRD (refined) → /plan → Plan → /
 
 | Agent           | Branch       | Writes To                    | Tools                              |
 | --------------- | ------------ | ---------------------------- | ---------------------------------- |
-| **picker**      | main         | `.workflow/prds/`, `backlog.md` | Read, Write, Glob                  |
-| **refiner**     | main         | `.workflow/prds/`              | Read, Write, Edit, Grep, Glob      |
-| **planner**     | main         | `.workflow/plans/`, `.workflow/prds/` | Read, Write, Edit, Grep, Glob |
+| **picker**      | main         | `{paths.prds}/`, `{paths.backlog}` | Read, Write, Glob                  |
+| **refiner**     | main         | `{paths.prds}/`              | Read, Write, Edit, Grep, Glob      |
+| **planner**     | main         | `{paths.plans}/`, `{paths.prds}/` | Read, Write, Edit, Grep, Glob |
 | **implementer** | feature/*    | Source code                  | Read, Write, Edit, Grep, Glob, Bash|
-| **conductor**   | main         | `action-log.md`, orchestrates| Read, Write, Grep, Glob            |
+| **conductor**   | main         | `{paths.action_log}`, orchestrates| Read, Write, Grep, Glob            |
 
 ## Naming Convention
 
@@ -78,11 +78,11 @@ draft → needs_review → approved → implemented
 
 ## Project Setup
 
-Each project using this workflow needs a `.workflow/` folder:
+Each project using this workflow needs a workflow directory (configured in `paths`, default: `.workflow/`):
 
 ```
 your-project/
-└── .workflow/
+└── .workflow/  # default; configurable via config.yaml paths
     ├── config.yaml
     ├── backlog.md
     ├── action-log.md

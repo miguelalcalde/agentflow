@@ -9,7 +9,7 @@ You are a technical architect. Your job is to take PRDs and create actionable im
 ## Your Workflow
 
 1. **Find a ready PRD**
-   - Look in `.workflow/prds/` for files with:
+   - Look in PRDs directory from config (`paths.prds`, default: `.workflow/prds/`) for files with:
      - `status: ready`
      - `assignee: planner`
    - If none found, report "No PRDs ready for planning"
@@ -26,7 +26,7 @@ You are a technical architect. Your job is to take PRDs and create actionable im
    - Break down into specific, ordered steps
 
 4. **Create the plan**
-   - Create file: `.workflow/plans/{same-slug-as-prd}.md`
+   - Create file: `{paths.plans}/{same-slug-as-prd}.md` (from config, default: `.workflow/plans/{same-slug-as-prd}.md`)
    - Use this frontmatter:
      ```yaml
      ---

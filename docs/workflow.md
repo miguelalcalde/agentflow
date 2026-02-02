@@ -57,7 +57,7 @@ Agent Workflow is designed to work with both **Cursor** and **Claude Code**. The
 | Purpose | Claude Code | Cursor | Scope |
 |---------|-------------|--------|-------|
 | Agent definitions | `.claude/agents/` | `.cursor/agents/` | Project |
-| Workflow state | `.workflow/` | `.workflow/` | Project |
+| Workflow state | `{paths.*}` (default: `.workflow/`) | `{paths.*}` (default: `.workflow/`) | Project |
 | Rules | - | `.cursor/rules/` | Project |
 | Skills | - | `~/.cursor/skills/` | User (global) |
 | Instructions | `CLAUDE.md` or `~/.claude/CLAUDE.md` | - | Project or User |
@@ -68,7 +68,7 @@ The installer creates identical agent definitions in both locations:
 
 ```
 your-project/
-├── .workflow/              # Shared workflow state
+├── .workflow/              # Shared workflow state (default; configurable via config.yaml paths)
 │   ├── config.yaml
 │   ├── backlog.md
 │   ├── action-log.md
@@ -123,10 +123,10 @@ The agent definitions are identical in both `.claude/agents/` and `.cursor/agent
 
 ---
 
-## Directory Structure
+## Directory Structure (defaults)
 
 ```
-.workflow/
+.workflow/  # Default workflow directory; configurable via config.yaml paths
 ├── config.yaml              # Project workflow configuration
 ├── backlog.md               # Task backlog (Picker reads from here)
 ├── action-log.md            # Conductor audit trail
@@ -198,10 +198,10 @@ At any point, if questions arise → status becomes `blocked`, assignee becomes 
 **Purpose**: Select a task from backlog, analyze codebase, create a PRD
 
 **Workflow**:
-1. Read `backlog.md`, find first task with status `not_started`
+1. Read backlog file from config (`paths.backlog`, default: `.workflow/backlog.md`), find first task with status `not_started`
 2. Mark task as `in_progress` with assignee `picker`
 3. Analyze codebase to understand context
-4. Create PRD in `prds/{slug}.md` with status `ready`
+4. Create PRD in `{paths.prds}/{slug}.md` (from config, default: `.workflow/prds/{slug}.md`) with status `ready`
 5. Mark backlog task as `done`, link to PRD
 
 **Agent file**: `.claude/agents/picker.md`
@@ -211,7 +211,7 @@ At any point, if questions arise → status becomes `blocked`, assignee becomes 
 **Purpose**: Take a PRD and create an implementation plan
 
 **Workflow**:
-1. Find PRD with status `ready`, assignee `planner`
+1. Find PRD with status `ready`, assignee `planner` in PRDs directory (from `paths.prds`)
 2. Update PRD status to `in_progress`
 3. Create detailed implementation plan
 4. If questions arise, set status `blocked`
@@ -225,7 +225,7 @@ At any point, if questions arise → status becomes `blocked`, assignee becomes 
 **Purpose**: Review plan, refine it, or flag questions
 
 **Workflow**:
-1. Find plan with status `ready`, assignee `refiner`
+1. Find plan with status `ready`, assignee `refiner` in plans directory (from `paths.plans`)
 2. Update status to `in_progress`
 3. Review for completeness, accuracy, edge cases
 4. Try to answer existing questions
@@ -239,7 +239,7 @@ At any point, if questions arise → status becomes `blocked`, assignee becomes 
 **Purpose**: Execute a refined plan, write code, tests, commit
 
 **Workflow**:
-1. Find plan with status `ready`, assignee `implementer`
+1. Find plan with status `ready`, assignee `implementer` in plans directory (from `paths.plans`)
 2. Update status to `in_progress`
 3. Implement according to plan
 4. Write tests, run tests and linting
@@ -272,7 +272,7 @@ Instead of manually invoking each agent, the conductor:
 
 ### Configuration
 
-Configure the conductor in `.workflow/config.yaml`:
+Configure the conductor in the config file (typically `.workflow/config.yaml`):
 
 ```yaml
 orchestration:
@@ -310,7 +310,7 @@ orchestration:
 
 ### Action Log
 
-The conductor logs all actions to `.workflow/action-log.md`:
+The conductor logs all actions to the action log file (from `paths.action_log`, default: `.workflow/action-log.md`):
 
 ```markdown
 ## 2024-01-15 14:30 - Conductor Run
@@ -474,7 +474,7 @@ Implement the ready plan
 ### As a Human
 
 Edit files directly:
-1. **Add tasks**: Edit `.workflow/backlog.md`
+1. **Add tasks**: Edit backlog file from config (`paths.backlog`, default: `.workflow/backlog.md`)
 2. **Advance work**: Change `status` and `assignee` fields
 3. **Answer questions**: Update the `questions` field
 4. **Review**: Read PRDs and plans, add comments
@@ -483,7 +483,8 @@ Edit files directly:
 
 ## Configuration
 
-`.workflow/config.yaml`:
+Config file (typically `.workflow/config.yaml`):
+Paths shown below are defaults; update `paths` to move workflow files.
 
 ```yaml
 workflow:
