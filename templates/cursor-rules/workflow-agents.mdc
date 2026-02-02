@@ -1,6 +1,6 @@
 ---
 description: Multi-agent workflow rules for Cursor
-globs: [".workflow/**"]
+globs: .workflow/**
 ---
 
 # Multi-Agent Workflow Rules
@@ -11,16 +11,17 @@ See https://github.com/miguelalcalde/agentflow for complete documentation.
 
 ## Status Values
 
-| Status | Meaning |
-|--------|---------|
-| `not_started` | No work begun |
-| `ready` | Ready for next participant |
-| `in_progress` | Currently being worked on |
-| `review` | Needs review |
-| `blocked` | Has unanswered questions (assignee: human) |
-| `done` | Completed |
+| Status        | Meaning                                    |
+| ------------- | ------------------------------------------ |
+| `not_started` | No work begun                              |
+| `ready`       | Ready for next participant                 |
+| `in_progress` | Currently being worked on                  |
+| `review`      | Needs review                               |
+| `blocked`     | Has unanswered questions (assignee: human) |
+| `done`        | Completed                                  |
 
 ## Workflow Directory Structure (defaults)
+
 Locations are configurable via `paths` in config.
 
 ```
@@ -114,10 +115,12 @@ When asked to "implement", "build", or "code this":
 ## Handling Questions
 
 Any participant can ask questions by:
+
 1. Adding to the `questions` field in the PRD/plan
 2. Setting `status: blocked`, `assignee: human`
 
 Any participant can answer questions by:
+
 1. Investigating the codebase
 2. Updating the `questions` field with answers
 3. Setting status back to `ready`
