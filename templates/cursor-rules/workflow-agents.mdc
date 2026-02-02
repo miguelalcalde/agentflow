@@ -7,7 +7,7 @@ globs: [".workflow/**"]
 
 This repository uses a file-based workflow system where agents and humans work together on tasks. All workflow state lives in the workflow directory (configured in `paths` section of the config, default: `.workflow/`).
 
-See https://github.com/miguelalcalde/agentworkflow for complete documentation.
+See https://github.com/miguelalcalde/agentflow for complete documentation.
 
 ## Status Values
 

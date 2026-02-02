@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 #
-# Agent Workflow Installer
+# Agentflow Installer
 # Installs the multi-agent workflow system in your project
 #
 # Usage:
 #   Remote install:
-#     curl -fsSL https://raw.githubusercontent.com/miguelalcalde/agentworkflow/main/install.sh | bash
+#     curl -fsSL https://raw.githubusercontent.com/miguelalcalde/agentflow/main/install.sh | bash
 #
 #   Local install (for testing):
 #     ./install.sh                     # Install in current directory using remote templates
@@ -17,7 +17,7 @@
 set -euo pipefail
 
 # Configuration
-REPO="miguelalcalde/agentworkflow"
+REPO="miguelalcalde/agentflow"
 BRANCH="main"
 BASE_URL="https://raw.githubusercontent.com/$REPO/$BRANCH"
 
@@ -206,7 +206,7 @@ if [[ "$TARGET_DIR" != "." ]]; then
     cd "$TARGET_DIR"
 fi
 
-log_info "Installing agent workflow in: $(pwd)"
+log_info "Installing Agentflow in: $(pwd)"
 
 if [[ "$LOCAL_MODE" == true ]]; then
     log_info "Using local templates from: $SCRIPT_DIR"
@@ -447,7 +447,7 @@ detect_project
 sed_inplace "s|name: \"My Project\"|name: \"$PROJECT_NAME\"|" .workflow/config.yaml 2>/dev/null || true
 
 echo ""
-log_success "Agent workflow installed successfully!"
+log_success "Agentflow installed successfully!"
 echo ""
 echo "Directory structure created:"
 echo "  .workflow/              - Workflow state files"

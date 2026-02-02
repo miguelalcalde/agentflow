@@ -2,7 +2,7 @@
 
 Questions that need human input before work can proceed.
 
-See the [workflow documentation](https://github.com/miguelalcalde/agentworkflow) for how questions flow through the system.
+See the [workflow documentation](https://github.com/miguelalcalde/agentflow) for how questions flow through the system.
 
 ---
 

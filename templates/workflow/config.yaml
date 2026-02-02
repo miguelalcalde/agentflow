@@ -1,5 +1,5 @@
 # Agent Workflow Configuration
-# See https://github.com/miguelalcalde/agentworkflow for documentation
+# See https://github.com/miguelalcalde/agentflow for documentation
 
 workflow:
   name: "My Project"

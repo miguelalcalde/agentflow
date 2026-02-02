@@ -1,18 +1,18 @@
-# Agent Workflow
+# Agentflow
 
 A file-based multi-agent workflow system where AI agents (Picker, Planner, Refiner, Implementer, Conductor) and humans work together on software tasks. Compatible with **Claude Code** and **Cursor**.
 
 ## Quick Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/miguelalcalde/agentworkflow/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/miguelalcalde/agentflow/main/install.sh | bash
 ```
 
 Or clone and run locally:
 
 ```bash
-git clone https://github.com/miguelalcalde/agentworkflow.git
-cd agentworkflow
+git clone https://github.com/miguelalcalde/agentflow.git
+cd agentflow
 ./install.sh /path/to/your/project
 ```
 
