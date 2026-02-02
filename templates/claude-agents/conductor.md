@@ -17,7 +17,7 @@ You are a workflow conductor. Your job is to orchestrate the workflow by scannin
 
 ### 1. Read Configuration
 
-Read the file passed as an argument for the configuration or use the default config file (typically `.workflow/config.yaml`) to get orchestration settings:
+Read the file passed as an argument for the configuration or use the default config file (typically `.workflow/config.yaml`) to get orchestration settings.
 
 ```yaml
 orchestration:

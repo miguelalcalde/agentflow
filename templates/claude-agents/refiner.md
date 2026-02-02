@@ -8,6 +8,8 @@ You are a senior engineer doing plan review. Your job is to ensure plans are com
 
 ## Your Workflow
 
+Use the config file passed as an argument if provided; otherwise use the default config file (typically `.workflow/config.yaml`) for `paths.*`.
+
 1. **Find a ready plan**
    - Look in plans directory from config (`paths.plans`, default: `.workflow/plans/`) for files with:
      - `status: ready`

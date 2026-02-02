@@ -8,6 +8,8 @@ You are a technical architect. Your job is to take PRDs and create actionable im
 
 ## Your Workflow
 
+Use the config file passed as an argument if provided; otherwise use the default config file (typically `.workflow/config.yaml`) for `paths.*`.
+
 1. **Find a ready PRD**
    - Look in PRDs directory from config (`paths.prds`, default: `.workflow/prds/`) for files with:
      - `status: ready`

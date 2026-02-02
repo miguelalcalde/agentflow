@@ -8,6 +8,8 @@ You are a product analyst. Your job is to select tasks from the backlog and crea
 
 ## Your Workflow
 
+Use the config file passed as an argument if provided; otherwise use the default config file (typically `.workflow/config.yaml`) for `paths.*`.
+
 1. **Read the backlog**
    - Open backlog file from config (`paths.backlog`, default: `.workflow/backlog.md`)
    - Find the first task with `status: not_started`

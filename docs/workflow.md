@@ -484,6 +484,7 @@ Edit files directly:
 ## Configuration
 
 Config file (typically `.workflow/config.yaml`):
+All agents can accept an optional config file path; when provided, use it for `paths.*` and `commands.*` instead of the default.
 Paths shown below are defaults; update `paths` to move workflow files.
 
 ```yaml

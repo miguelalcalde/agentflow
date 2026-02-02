@@ -5,7 +5,7 @@ globs: [".workflow/**"]
 
 # Multi-Agent Workflow Rules
 
-This repository uses a file-based workflow system where agents and humans work together on tasks. All workflow state lives in the workflow directory (configured in `paths` section of the config, default: `.workflow/`).
+This repository uses a file-based workflow system where agents and humans work together on tasks. All workflow state lives in the workflow directory (configured in `paths` section of the config, default: `.workflow/`). If a config file is provided to an agent, use it instead of the default.
 
 See https://github.com/miguelalcalde/agentflow for complete documentation.
 

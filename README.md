@@ -90,6 +90,8 @@ claude "Use the conductor agent to run the full pipeline"
 claude "Use the conductor agent with phases pick,plan only"
 ```
 
+All agents can accept an optional config file path; when provided, use it instead of the default config.
+
 ### With Cursor
 
 ```bash
