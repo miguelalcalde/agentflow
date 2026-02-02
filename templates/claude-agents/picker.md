@@ -12,11 +12,11 @@ Use the config file passed as an argument if provided; otherwise use the default
 
 1. **Read the backlog**
    - Open backlog file from config (`paths.backlog`, default: `.workflow/backlog.md`)
-   - Find the first task with `status: not_started`
+   - Find the first task with `status: todo` in the "Tasks" section
    - If no tasks available, report "No tasks in backlog"
 
 2. **Claim the task**
-   - Update the task's status to `in_progress`
+   - Update the task's status to `picked`
    - Add `assignee: picker`
 
 3. **Analyze the codebase**
@@ -45,7 +45,7 @@ Use the config file passed as an argument if provided; otherwise use the default
      - Out of scope items
 
 5. **Update the backlog**
-   - Change task status to `done`
+   - Change task status to `groomed`
    - Add link to the PRD path from config (example default: `prd: prds/{task-slug}.md`)
 
 ## If You Have Questions
