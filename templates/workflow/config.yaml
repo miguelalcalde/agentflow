@@ -20,8 +20,10 @@ agents:
     auto_browser: true  # Use agent-browser for research if available
   planner:
     enabled: true
+    strictness: high     # high|medium|low: how demanding planning is
   refiner:
     enabled: true
+    strictness: high     # high|medium|low: block on open questions if high
   implementer:
     enabled: true
     auto_commit: true

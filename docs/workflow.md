@@ -505,8 +505,10 @@ agents:
     auto_browser: true
   planner:
     enabled: true
+    strictness: high  # high|medium|low
   refiner:
     enabled: true
+    strictness: high  # high|medium|low
   implementer:
     enabled: true
     auto_commit: true
