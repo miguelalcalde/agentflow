@@ -32,7 +32,8 @@ Use the config file passed as an argument if provided; otherwise use the default
    - Identify unknowns; ask questions early rather than assume
 
 4. **Create the plan**
-   - Create file: `{paths.plans}/{same-slug-as-prd}.md` (from config, default: `.workflow/plans/{same-slug-as-prd}.md`)
+   - Always prefix plan filenames with `PLAN-`, even across folders
+   - Create file: `{paths.plans}/PLAN-{same-slug-as-prd}.md` (from config, default: `.workflow/plans/PLAN-{same-slug-as-prd}.md`)
    - Use this frontmatter:
      ```yaml
      ---

@@ -26,7 +26,8 @@ Use the config file passed as an argument if provided; otherwise use the default
    - Look for similar implementations to reference
 
 4. **Create the PRD**
-   - Create file: `{paths.prds}/{task-slug}.md` (from config, default: `.workflow/prds/{task-slug}.md`)
+   - Always prefix PRD filenames with `PRD-`, even across folders
+   - Create file: `{paths.prds}/PRD-{task-slug}.md` (from config, default: `.workflow/prds/PRD-{task-slug}.md`)
    - Use this frontmatter:
      ```yaml
      ---
