@@ -181,11 +181,12 @@ questions: []
 
 ### Typical Flow
 
-1. **Backlog task** (`not_started`) → Picker picks it up
-2. **PRD created** (`ready`, assignee: `planner`) → Planner picks it up
-3. **Plan created** (`ready`, assignee: `refiner`) → Refiner reviews
-4. **Plan refined** (`ready`, assignee: `implementer`) → Implementer builds
-5. **Code committed** → Plan marked `done`
+1. **Backlog task** (`todo`) → Picker picks it up
+2. **Duplicate check** → If duplicate found, task marked `duplicate` and linked to existing PRD
+3. **PRD created** (`ready`, assignee: `planner`) → Planner picks it up
+4. **Plan created** (`ready`, assignee: `refiner`) → Refiner reviews
+5. **Plan refined** (`ready`, assignee: `implementer`) → Implementer builds
+6. **Code committed** → Plan marked `done`
 
 At any point, if questions arise → status becomes `blocked`, assignee becomes `human`
 
@@ -198,11 +199,17 @@ At any point, if questions arise → status becomes `blocked`, assignee becomes 
 **Purpose**: Select a task from backlog, analyze codebase, create a PRD
 
 **Workflow**:
-1. Read backlog file from config (`paths.backlog`, default: `.workflow/backlog.md`), find first task with status `not_started`
-2. Mark task as `in_progress` with assignee `picker`
-3. Analyze codebase to understand context
-4. Create PRD in `{paths.prds}/{slug}.md` (from config, default: `.workflow/prds/{slug}.md`) with status `ready`
-5. Mark backlog task as `done`, link to PRD
+1. Read backlog file from config (`paths.backlog`, default: `.workflow/backlog.md`), find first task with status `todo`
+2. **Check for duplicates** (guardrail):
+   - Scan existing PRDs for matching `source_task` (exact match)
+   - Check for semantic similarity (high keyword overlap in titles/descriptions)
+   - If duplicate found: mark task as `duplicate`, link to existing PRD, skip PRD creation
+3. Mark task as `picked` with assignee `picker`
+4. Analyze codebase to understand context
+5. Create PRD in `{paths.prds}/PRD-{slug}.md` (from config, default: `.workflow/prds/PRD-{slug}.md`) with status `ready`
+6. Mark backlog task as `groomed`, link to PRD
+
+**Backlog statuses**: `todo` | `picked` | `groomed` | `duplicate`
 
 **Agent file**: `.claude/agents/picker.md`
 
@@ -286,7 +293,7 @@ orchestration:
 
 | Phase | Reads | Writes |
 |-------|-------|--------|
-| pick | `backlog: status=not_started` | `PRD: assignee=planner` |
+| pick | `backlog: status=todo` | `PRD: assignee=planner` (or `backlog: status=duplicate` if duplicate found) |
 | plan | `PRD: assignee=planner` | `plan: assignee=refiner` |
 | refine | `plan: assignee=refiner` | `plan: assignee=implementer` |
 | implement | `plan: assignee=implementer` | `plan: status=done`, opens PR |
@@ -337,11 +344,18 @@ The conductor logs all actions to the action log file (from `paths.action_log`, 
 ### Backlog Task
 
 ```markdown
-### Task title
-- status: not_started
-- priority: high
-- description: |
-    Detailed description of what needs to be done.
+- [status] [type] [priority] Task name: Brief description
+
+Status: todo | picked | groomed | duplicate
+Type: feat | fix | chore
+Priority: low | med | high
+PRD (optional): prd: prds/{task-slug}.md
+```
+
+Example:
+```markdown
+- [todo] [feat] [high] Add user authentication: Login/signup with OAuth support
+- [duplicate] [feat] [med] User login: Implement login flow prd: prds/PRD-user-auth.md
 ```
 
 ### PRD Format
@@ -588,7 +602,7 @@ Each phase reads and writes different status/assignee combinations, so there are
 
 | Phase | Reads status | Writes status | Safe to parallelize with |
 |-------|--------------|---------------|--------------------------|
-| pick | `backlog: not_started` | `PRD: assignee=planner` | plan, refine, implement |
+| pick | `backlog: todo` | `PRD: assignee=planner` or `backlog: duplicate` | plan, refine, implement |
 | plan | `PRD: assignee=planner` | `plan: assignee=refiner` | pick, refine, implement |
 | refine | `plan: assignee=refiner` | `plan: assignee=implementer` | pick, plan, implement |
 | implement | `plan: assignee=implementer` | `plan: status=done` | pick, plan, refine |
@@ -644,7 +658,7 @@ orchestration:
 ### Agent says "No tasks/PRDs/plans ready"
 
 Check that files have the correct status and assignee:
-- Tasks in backlog need `status: not_started`
+- Tasks in backlog need `status: todo`
 - PRDs for planner need `status: ready`, `assignee: planner`
 - Plans for refiner need `status: ready`, `assignee: refiner`
 - Plans for implementer need `status: ready`, `assignee: implementer`

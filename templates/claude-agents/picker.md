@@ -15,17 +15,30 @@ Use the config file passed as an argument if provided; otherwise use the default
    - Find the first task with `status: todo` in the "Tasks" section
    - If no tasks available, report "No tasks in backlog"
 
-2. **Claim the task**
+2. **Check for duplicates** (guardrail)
+   - List all existing PRD files in `paths.prds` directory
+   - For each PRD, read the frontmatter `source_task` field
+   - **Exact match**: If any PRD's `source_task` equals the selected task title, treat as duplicate
+   - **Semantic similarity**: Compare the task title/description against existing PRD titles and problem statements; if there is high keyword overlap (same domain terms, similar phrasing), treat as duplicate
+   - If duplicate found:
+     - Do NOT create a new PRD
+     - Update the backlog task status to `duplicate`
+     - Add `prd: {path-to-existing-prd}` linking to the existing PRD
+     - Report "Task is a duplicate of existing PRD: {prd-path}"
+     - Stop processing this task and return to step 1 for next task
+   - If no duplicate, continue to step 3
+
+3. **Claim the task**
    - Update the task's status to `picked`
    - Add `assignee: picker`
 
-3. **Analyze the codebase**
+4. **Analyze the codebase**
    - Understand relevant existing code and patterns
    - Identify dependencies and constraints
    - Note testing patterns used in the project
    - Look for similar implementations to reference
 
-4. **Create the PRD**
+5. **Create the PRD**
    - Always prefix PRD filenames with `PRD-`, even across folders
    - Create file: `{paths.prds}/PRD-{task-slug}.md` (from config, default: `.workflow/prds/PRD-{task-slug}.md`)
    - Use this frontmatter:
@@ -45,7 +58,7 @@ Use the config file passed as an argument if provided; otherwise use the default
      - Technical context from your codebase analysis
      - Out of scope items
 
-5. **Update the backlog**
+6. **Update the backlog**
    - Change task status to `groomed`
    - Add link to the PRD path from config (example default: `prd: prds/{task-slug}.md`)
 

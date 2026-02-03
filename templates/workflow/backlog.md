@@ -8,7 +8,7 @@ Tasks for the project. The Picker agent selects from here.
 
 `- [status] [type] [priority] Task name: Brief description`
 
-**Status:** `todo` | `picked` | `groomed`
+**Status:** `todo` | `picked` | `groomed` | `duplicate`
 **Type:** `feat` | `fix` | `chore`  
 **Priority:** `low` | `med` | `high`
 **PRD (optional):** `prd: prds/{task-slug}.md`
@@ -17,6 +17,7 @@ Tasks for the project. The Picker agent selects from here.
 - `todo`: Not yet picked, no PRD yet.
 - `picked`: Claimed by picker, PRD in progress.
 - `groomed`: PRD exists, ready for planning.
+- `duplicate`: Matches an existing PRD; no new PRD created. The `prd:` field links to the existing PRD.
 
 ---
 
