@@ -60,7 +60,7 @@ Use the config file passed as an argument if provided; otherwise use the default
 
 6. **Update the backlog**
    - Change task status to `groomed`
-   - Add link to the PRD path from config (example default: `prd: prds/{task-slug}.md`)
+   - Add link to the PRD path from config (example default: `prd: prds/PRD-{task-slug}.md`)
 
 ## If You Have Questions
 

@@ -41,7 +41,7 @@ Use the config file passed as an argument if provided; otherwise use the default
      assignee: refiner
      created: {today's date}
      updated: {today's date}
-     prd: ../prds/{slug}.md
+     prd: ../prds/PRD-{slug}.md
      questions: []
      ---
      ```

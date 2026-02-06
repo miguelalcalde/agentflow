@@ -43,7 +43,7 @@ When asked to "pick a task", "start new work", or "create a PRD":
 2. Find first task with `status: not_started`
 3. Update task: `status: in_progress`, `assignee: picker`
 4. Analyze the codebase for context
-5. Create PRD in `{paths.prds}/{slug}.md` (from config, default: `.workflow/prds/{slug}.md`):
+5. Create PRD in `{paths.prds}/PRD-{slug}.md` (from config, default: `.workflow/prds/PRD-{slug}.md`):
    ```yaml
    ---
    status: ready
@@ -54,7 +54,7 @@ When asked to "pick a task", "start new work", or "create a PRD":
    questions: []
    ---
    ```
-6. Update backlog task: `status: done`, add `prd: prds/{slug}.md`
+6. Update backlog task: `status: done`, add `prd: prds/PRD-{slug}.md`
 
 ---
 
@@ -65,14 +65,14 @@ When asked to "plan", "create a plan", or given a PRD to work on:
 1. Find PRD in PRDs directory (from `paths.prds`, default: `.workflow/prds/`) with `status: ready`, `assignee: planner`
 2. Update PRD: `status: in_progress`
 3. Analyze PRD and codebase
-4. Create plan in `{paths.plans}/{slug}.md` (from config, default: `.workflow/plans/{slug}.md`):
+4. Create plan in `{paths.plans}/PLAN-{slug}.md` (from config, default: `.workflow/plans/PLAN-{slug}.md`):
    ```yaml
    ---
    status: ready
    assignee: refiner
    created: YYYY-MM-DD
    updated: YYYY-MM-DD
-   prd: ../prds/{slug}.md
+  prd: ../prds/PRD-{slug}.md
    questions: []
    ---
    ```

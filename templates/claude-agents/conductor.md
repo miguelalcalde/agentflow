@@ -41,9 +41,9 @@ Build a work queue by scanning files:
 | Phase     | Scan For                                            | Location (from config)                                 |
 | --------- | --------------------------------------------------- | ------------------------------------------------------ |
 | pick      | Tasks with `status: ready`                          | `{paths.backlog}` (default: `.workflow/backlog.md`)    |
-| plan      | PRDs with `status: ready`, `assignee: planner`      | `{paths.prds}/*.md` (default: `.workflow/prds/*.md`)   |
-| refine    | Plans with `status: ready`, `assignee: refiner`     | `{paths.plans}/*.md` (default: `.workflow/plans/*.md`) |
-| implement | Plans with `status: ready`, `assignee: implementer` | `{paths.plans}/*.md` (default: `.workflow/plans/*.md`) |
+| plan      | PRDs with `status: ready`, `assignee: planner`      | `{paths.prds}/PRD-*.md` (default: `.workflow/prds/PRD-*.md`)   |
+| refine    | Plans with `status: ready`, `assignee: refiner`     | `{paths.plans}/PLAN-*.md` (default: `.workflow/plans/PLAN-*.md`) |
+| implement | Plans with `status: ready`, `assignee: implementer` | `{paths.plans}/PLAN-*.md` (default: `.workflow/plans/PLAN-*.md`) |
 
 Also count blocked items for reporting.
 
@@ -90,7 +90,7 @@ For each phase, perform the corresponding agent's workflow inline:
 1. Find task in backlog with `status: not_started`
 2. Mark as `in_progress`, `assignee: picker`
 3. Analyze codebase for context
-4. Create PRD in `{paths.prds}/{slug}.md` (from config, default: `.workflow/prds/{slug}.md`) with `status: ready`, `assignee: planner`
+4. Create PRD in `{paths.prds}/PRD-{slug}.md` (from config, default: `.workflow/prds/PRD-{slug}.md`) with `status: ready`, `assignee: planner`
 5. Mark backlog task as `done`, link to PRD
 6. Log: `[x] pick: {slug} → PRD created`
 
@@ -99,7 +99,7 @@ For each phase, perform the corresponding agent's workflow inline:
 1. Find PRD with `status: ready`, `assignee: planner`
 2. Mark PRD as `in_progress`
 3. Analyze PRD and codebase
-4. Create plan in `{paths.plans}/{slug}.md` (from config, default: `.workflow/plans/{slug}.md`) with `status: ready`, `assignee: refiner`
+4. Create plan in `{paths.plans}/PLAN-{slug}.md` (from config, default: `.workflow/plans/PLAN-{slug}.md`) with `status: ready`, `assignee: refiner`
 5. Mark PRD as `done`
 6. Log: `[x] plan: {slug} → plan created`
 
