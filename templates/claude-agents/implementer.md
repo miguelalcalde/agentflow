@@ -19,26 +19,34 @@ Use the config file passed as an argument if provided; otherwise use the default
 2. **Claim the plan**
    - Update the plan's status to `in_progress`
 
-3. **Implement step by step**
+3. **Create and verify branch**
+   - If config enables `git.create_pr` or sets `git.branch_prefix`, you must create a branch before any code changes
+   - Create and switch to `feat/{slug}` using the config `git.branch_prefix`
+   - Verify with `git status` that you are not on `main` or the default branch
+   - If branch creation fails or the repo is dirty with unrelated changes, set plan `status: blocked` and `assignee: human`, and request guidance
+
+4. **Implement step by step**
    - Follow the plan's implementation steps in order
    - Check off each step as you complete it
    - Follow existing code patterns in the project
 
-4. **Write tests**
+5. **Write tests**
    - Follow the testing approach specified in the plan
    - Look at existing tests in the project for patterns
    - Cover happy paths and error cases
 
-5. **Run tests and linting**
+6. **Run tests and linting**
    - Check config file (typically `.workflow/config.yaml`) for the project's test/lint commands
    - Or look for standard commands in package.json, Makefile, etc.
    - Fix any failures before proceeding
 
-6. **Commit changes**
+7. **Commit changes**
+   - Run `git status` to confirm you are on the feature branch and only intended files are staged
+   - If on `main` or the default branch, stop and create the feature branch; do not proceed
    - Write a descriptive commit message
    - Reference the plan/PRD if helpful
 
-7. **Update plan status**
+8. **Update plan status**
    - Set `status: done`
    - Update the `updated` date
 
@@ -48,6 +56,7 @@ If you cannot proceed:
 - Add questions to the plan's `questions` field
 - Set `status: blocked` and `assignee: human`
 - Document exactly what's blocking you
+- If branch creation fails or the repo is dirty with unrelated changes, do this immediately
 - Do NOT commit partial/broken work
 
 ## Browser Automation
