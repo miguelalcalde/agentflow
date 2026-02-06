@@ -17,13 +17,13 @@ paths:
 agents:
   picker:
     enabled: true
-    auto_browser: true  # Use agent-browser for research if available
+    auto_browser: true # Use agent-browser for research if available
   planner:
     enabled: true
-    strictness: high     # high|medium|low: how demanding planning is
+    strictness: high # high|medium|low: how demanding planning is
   refiner:
     enabled: true
-    strictness: high     # high|medium|low: block on open questions if high
+    strictness: high # high|medium|low: block on open questions if high
   implementer:
     enabled: true
     auto_commit: true
@@ -32,9 +32,9 @@ agents:
 
 # Commands (customize for your project)
 commands:
-  test: "npm test"           # or: bun test, pytest, go test, etc.
-  lint: "npm run lint"       # or: bun run check, ruff, golangci-lint, etc.
-  build: "npm run build"     # or: bun run build, cargo build, etc.
+  test: "npm test" # or: bun test, pytest, go test, etc.
+  lint: "npm run lint" # or: bun run check, ruff, golangci-lint, etc.
+  build: "npm run build" # or: bun run build, cargo build, etc.
 
 # Boundaries - files agents should not modify
 boundaries:
@@ -51,21 +51,21 @@ boundaries:
 
 # Conductor orchestration settings
 orchestration:
-  name: default  # conductor name for action-log tracking (useful when running multiple)
-  
+  name: default # conductor name for action-log tracking (useful when running multiple)
+
   # Array of phases to run. Options: pick, plan, refine, implement
-  phases: [pick, plan, refine, implement]  # full pipeline
+  phases: [pick, plan, refine] # full pipeline
   # phases: [pick]                          # pick only
   # phases: [pick, plan]                    # pick and plan, stop before refine
   # phases: [plan, implement]               # skip pick, plan existing PRDs and implement
 
-  max_iterations: 20           # safety limit to prevent infinite loops
-  stop_on_first_block: false   # true = stop at first blocked item
+  max_iterations: 20 # safety limit to prevent infinite loops
+  stop_on_first_block: false # true = stop at first blocked item
 
 # Git settings for implementer
 git:
-  branch_prefix: "feat/"       # prefix for feature branches
-  create_pr: true              # auto-create PR when implementation complete
-  pr_draft: true               # create as draft PR
-  commit_per_step: false       # true = commit after each step, false = batch commits
-  never_merge: true            # safety: agents cannot merge PRs
+  branch_prefix: "feat/" # prefix for feature branches
+  create_pr: true # auto-create PR when implementation complete
+  pr_draft: true # create as draft PR
+  commit_per_step: false # true = commit after each step, false = batch commits
+  never_merge: true # safety: agents cannot merge PRs

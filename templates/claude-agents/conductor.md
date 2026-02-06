@@ -38,12 +38,12 @@ If no file is provided or the default config file is not found, use these values
 
 Build a work queue by scanning files:
 
-| Phase     | Scan For                                            | Location (from config)                               |
-| --------- | --------------------------------------------------- | ---------------------------------------------------- |
-| pick      | Tasks with `status: not_started`                    | `{paths.backlog}` (default: `.workflow/backlog.md`)  |
-| plan      | PRDs with `status: ready`, `assignee: planner`      | `{paths.prds}/*.md` (default: `.workflow/prds/*.md`)  |
-| refine    | Plans with `status: ready`, `assignee: refiner`     | `{paths.plans}/*.md` (default: `.workflow/plans/*.md`)|
-| implement | Plans with `status: ready`, `assignee: implementer` | `{paths.plans}/*.md` (default: `.workflow/plans/*.md`)|
+| Phase     | Scan For                                            | Location (from config)                                 |
+| --------- | --------------------------------------------------- | ------------------------------------------------------ |
+| pick      | Tasks with `status: ready`                          | `{paths.backlog}` (default: `.workflow/backlog.md`)    |
+| plan      | PRDs with `status: ready`, `assignee: planner`      | `{paths.prds}/*.md` (default: `.workflow/prds/*.md`)   |
+| refine    | Plans with `status: ready`, `assignee: refiner`     | `{paths.plans}/*.md` (default: `.workflow/plans/*.md`) |
+| implement | Plans with `status: ready`, `assignee: implementer` | `{paths.plans}/*.md` (default: `.workflow/plans/*.md`) |
 
 Also count blocked items for reporting.
 
